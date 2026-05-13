@@ -8,14 +8,14 @@
 </div>
 
 ### ✨ Features
-- Beautiful Rich Terminal Interface
-- Video + Audio (MP3) Download Support
+- Beautiful Banner Interface
+- Video + Audio (MP3) Download
 - Quality Selection (Best, 1080p, 720p)
-- Custom Output Folder
-- Fast & Reliable using yt-dlp
-- One-command Global Installation
+- Custom Output Folder Support
+- Playlist Support
+- Fast & Reliable
 
-### 🚀 Quick Installation
+### 🚀 Installation
 
 ```bash
 git clone https://github.com/rafiqdev1/vidly-pro.git
