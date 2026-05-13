@@ -1,7 +1,7 @@
+cat > vidly.py << 'EOF'
 #!/usr/bin/env python3
 """
 Vidly Pro - Advanced Media Downloader for Termux
-Author: rafiqdev1
 """
 
 import os
@@ -46,12 +46,10 @@ def download(url: str, quality: int, folder: str):
             'outtmpl': f'{folder}/%(title)s.%(ext)s',
             'quiet': False,
             'no_warnings': True,
-            'ignoreerrors': True,
-            'noplaylist': False,          # Playlist support on
+            'noplaylist': False,
             'postprocessors': []
         }
 
-        # Audio only
         if quality == 5:
             opts['postprocessors'].append({
                 'key': 'FFmpegExtractAudio',
@@ -69,18 +67,17 @@ def download(url: str, quality: int, folder: str):
             TimeRemainingColumn(),
             console=console
         ) as progress:
-            
             task = progress.add_task("[cyan]Downloading...", total=None)
             
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
-                
+            
             progress.update(task, completed=100)
-        
-        rprint(f"\n[bold green]✅ Download Completed Successfully![/bold green]")
+
+        rprint(f"\n[bold green]✅ Download Completed![/bold green]")
         if info and 'title' in info:
             rprint(f"[bold white]🎬 {info['title']}[/bold white]")
-        rprint(f"[bold yellow]📁 Location: {folder}[/bold yellow]")
+        rprint(f"[bold yellow]📁 Saved in: {folder}[/bold yellow]")
 
     except Exception as e:
         rprint(f"[bold red]❌ Error: {e}[/bold red]")
@@ -88,7 +85,6 @@ def download(url: str, quality: int, folder: str):
 def main():
     while True:
         banner()
-        
         rprint("[bold magenta]1.[/] Download Video / Playlist")
         rprint("[bold magenta]2.[/] Exit\n")
         
@@ -96,7 +92,7 @@ def main():
         
         if choice == "2":
             rprint("[bold red]Thank you for using Vidly Pro! 👋[/bold red]")
-            sys.exit(0)
+            break
         
         url = Prompt.ask("[bold green]Paste URL[/bold green]")
         
@@ -108,26 +104,18 @@ def main():
         rprint("5. Audio Only (MP3)")
         
         q = IntPrompt.ask("Choose quality", default=1)
-        
         folder = Prompt.ask("Save to folder", default="Vidly_Downloads")
         
         rprint(f"\n[bold blue]Starting download...[/bold blue]\n")
         download(url, q, folder)
         
-        input("\n[bold]Press Enter for new download...[/bold]")
+        input("\nPress Enter for next download...")
 
 if __name__ == "__main__":
     try:
-        # Check dependencies
-        try:
-            import yt_dlp
-            import rich
-        except ImportError:
-            rprint("[bold red]Dependencies not installed. Installing...[/bold red]")
-            os.system("pip install -r requirements.txt")
-        
         main()
     except KeyboardInterrupt:
-        rprint("\n[bold red]⛔ Cancelled by user.[/bold red]")
+        rprint("\n[bold red]Cancelled.[/bold red]")
     except Exception as e:
-        rprint(f"[bold red]Critical Error: {e}[/bold red]")
+        rprint(f"[bold red]Error: {e}[/bold red]")
+EOF
