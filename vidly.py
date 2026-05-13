@@ -1,62 +1,133 @@
 #!/usr/bin/env python3
 """
-Vidly Pro - Simple Media Downloader for Termux
+Vidly Pro - Advanced Media Downloader for Termux
+Author: rafiqdev1
 """
 
-import argparse
 import os
 import sys
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt, IntPrompt
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
+from rich import print as rprint
 import yt_dlp
 
-def show_banner():
-    print("=" * 60)
-    print("              VIDLY PRO v1.0")
-    print("       Advanced Media Downloader for Termux")
-    print("=" * 60)
-    print()
+console = Console()
 
-def download(url, quality="best", output="Downloads", audio_only=False):
-    os.makedirs(output, exist_ok=True)
-    
-    ydl_opts = {
-        'outtmpl': f'{output}/%(title)s.%(ext)s',
-        'quiet': False,
+def clear():
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+def banner():
+    clear()
+    text = """
+    🔥🔥🔥   V I D L Y   P R O   🔥🔥🔥
+          Advanced Media Downloader
+    """
+    console.print(Panel.fit(text, style="bold red", border_style="yellow"))
+    rprint("             [bold cyan]Termux Edition[/bold cyan]\n")
+
+def get_format(choice: int):
+    formats = {
+        1: "bestvideo+bestaudio/best",
+        2: "bestvideo[height<=1080]+bestaudio/best",
+        3: "bestvideo[height<=720]+bestaudio/best",
+        4: "bestvideo[height<=480]+bestaudio/best",
+        5: "bestaudio/best"
     }
-    
-    if audio_only:
-        ydl_opts.update({
-            'format': 'bestaudio/best',
-            'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
-        })
-    elif quality == "720":
-        ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best'
-    elif quality == "1080":
-        ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best'
-    
-    print("Downloading...")
+    return formats.get(choice, "bestvideo+bestaudio/best")
+
+def download(url: str, quality: int, folder: str):
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-        print("✅ Download Completed Successfully!")
+        os.makedirs(folder, exist_ok=True)
+        
+        opts = {
+            'format': get_format(quality),
+            'outtmpl': f'{folder}/%(title)s.%(ext)s',
+            'quiet': False,
+            'no_warnings': True,
+            'ignoreerrors': True,
+            'noplaylist': False,          # Playlist support on
+            'postprocessors': []
+        }
+
+        # Audio only
+        if quality == 5:
+            opts['postprocessors'].append({
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            })
+        else:
+            opts['postprocessors'].append({'key': 'FFmpegMetadata'})
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeRemainingColumn(),
+            console=console
+        ) as progress:
+            
+            task = progress.add_task("[cyan]Downloading...", total=None)
+            
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                
+            progress.update(task, completed=100)
+        
+        rprint(f"\n[bold green]✅ Download Completed Successfully![/bold green]")
+        if info and 'title' in info:
+            rprint(f"[bold white]🎬 {info['title']}[/bold white]")
+        rprint(f"[bold yellow]📁 Location: {folder}[/bold yellow]")
+
     except Exception as e:
-        print(f"❌ Error: {e}")
+        rprint(f"[bold red]❌ Error: {e}[/bold red]")
 
 def main():
-    show_banner()
-    
-    parser = argparse.ArgumentParser(description="Vidly Pro")
-    parser.add_argument("url", nargs="?", help="Video URL")
-    parser.add_argument("-q", "--quality", choices=["best", "1080", "720"], default="best")
-    parser.add_argument("-a", "--audio", action="store_true")
-    parser.add_argument("-o", "--output", default="Downloads")
-    
-    args = parser.parse_args()
-    
-    if not args.url:
-        parser.print_help()
-        sys.exit(1)
-    
-    download(args.url, args.quality, args.output, args.audio)
+    while True:
+        banner()
+        
+        rprint("[bold magenta]1.[/] Download Video / Playlist")
+        rprint("[bold magenta]2.[/] Exit\n")
+        
+        choice = Prompt.ask("[bold cyan]Select option[/bold cyan]", choices=["1", "2"], default="1")
+        
+        if choice == "2":
+            rprint("[bold red]Thank you for using Vidly Pro! 👋[/bold red]")
+            sys.exit(0)
+        
+        url = Prompt.ask("[bold green]Paste URL[/bold green]")
+        
+        rprint("\n[bold yellow]Quality:[/bold yellow]")
+        rprint("1. Best Quality")
+        rprint("2. 1080p")
+        rprint("3. 720p")
+        rprint("4. 480p")
+        rprint("5. Audio Only (MP3)")
+        
+        q = IntPrompt.ask("Choose quality", default=1)
+        
+        folder = Prompt.ask("Save to folder", default="Vidly_Downloads")
+        
+        rprint(f"\n[bold blue]Starting download...[/bold blue]\n")
+        download(url, q, folder)
+        
+        input("\n[bold]Press Enter for new download...[/bold]")
 
 if __name__ == "__main__":
-    main()
+    try:
+        # Check dependencies
+        try:
+            import yt_dlp
+            import rich
+        except ImportError:
+            rprint("[bold red]Dependencies not installed. Installing...[/bold red]")
+            os.system("pip install -r requirements.txt")
+        
+        main()
+    except KeyboardInterrupt:
+        rprint("\n[bold red]⛔ Cancelled by user.[/bold red]")
+    except Exception as e:
+        rprint(f"[bold red]Critical Error: {e}[/bold red]")
