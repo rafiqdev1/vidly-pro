@@ -1,5 +1,3 @@
-cat > requirements.txt << EOF
 yt-dlp
 rich
 colorama
-EOF
