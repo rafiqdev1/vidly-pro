@@ -1,4 +1,3 @@
-cat > vidly.py << 'EOF'
 #!/usr/bin/env python3
 """
 Vidly Pro - Advanced Media Downloader for Termux
@@ -40,7 +39,7 @@ def get_format(choice: int):
 def download(url: str, quality: int, folder: str):
     try:
         os.makedirs(folder, exist_ok=True)
-        
+
         opts = {
             'format': get_format(quality),
             'outtmpl': f'{folder}/%(title)s.%(ext)s',
@@ -68,10 +67,10 @@ def download(url: str, quality: int, folder: str):
             console=console
         ) as progress:
             task = progress.add_task("[cyan]Downloading...", total=None)
-            
+
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
-            
+
             progress.update(task, completed=100)
 
         rprint(f"\n[bold green]✅ Download Completed![/bold green]")
@@ -87,28 +86,28 @@ def main():
         banner()
         rprint("[bold magenta]1.[/] Download Video / Playlist")
         rprint("[bold magenta]2.[/] Exit\n")
-        
+
         choice = Prompt.ask("[bold cyan]Select option[/bold cyan]", choices=["1", "2"], default="1")
-        
+
         if choice == "2":
             rprint("[bold red]Thank you for using Vidly Pro! 👋[/bold red]")
             break
-        
+
         url = Prompt.ask("[bold green]Paste URL[/bold green]")
-        
+
         rprint("\n[bold yellow]Quality:[/bold yellow]")
         rprint("1. Best Quality")
         rprint("2. 1080p")
         rprint("3. 720p")
         rprint("4. 480p")
         rprint("5. Audio Only (MP3)")
-        
+
         q = IntPrompt.ask("Choose quality", default=1)
         folder = Prompt.ask("Save to folder", default="Vidly_Downloads")
-        
+
         rprint(f"\n[bold blue]Starting download...[/bold blue]\n")
         download(url, q, folder)
-        
+
         input("\nPress Enter for next download...")
 
 if __name__ == "__main__":
@@ -118,4 +117,3 @@ if __name__ == "__main__":
         rprint("\n[bold red]Cancelled.[/bold red]")
     except Exception as e:
         rprint(f"[bold red]Error: {e}[/bold red]")
-EOF
